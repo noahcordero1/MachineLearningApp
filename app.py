@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -207,6 +208,11 @@ if st.session_state.data is not None:
                         st.session_state.predictions = model.predict(X_test)
                         st.session_state.X_test = X_test
                         st.session_state.feature_names = X.columns
+                        
+                        # Store additional info for download
+                        st.session_state.selected_numeric = selected_numeric
+                        st.session_state.selected_categorical = selected_categorical
+                        st.session_state.model_choice = model_choice
                     
                     st.success("Model trained successfully!")
                 
@@ -341,6 +347,88 @@ if st.session_state.data is not None:
             
             else:
                 st.info("Feature importance not available for this model type.")
+                
+        # Model Download Section (NEW)
+        st.divider()
+        st.subheader("5. Download Trained Model")
+        
+        st.write("You can download the trained model for use in your own applications.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Serialize the model
+            model_pickle = pickle.dumps(st.session_state.model)
+            
+            # Get model type for filename
+            model_name = st.session_state.model_choice.replace(" ", "_").lower()
+            
+            # Create download button
+            st.download_button(
+                label="Download Model",
+                data=model_pickle,
+                file_name=f"{model_name}_model.pkl",
+                mime="application/octet-stream",
+                help="Download the trained model as a pickle file"
+            )
+            
+            st.warning("Note: Only open pickle files from trusted sources.")
+        
+        with col2:
+            # Create model info for users
+            feature_info = {
+                "Features": list(st.session_state.feature_names),
+                "Target": target_variable,
+                "Model Type": st.session_state.model_type,
+                "Model": st.session_state.model_choice
+            }
+            
+            # Convert to JSON for download
+            feature_info_str = str(feature_info)
+            
+            # Download button for model info
+            st.download_button(
+                label="Download Model Info",
+                data=feature_info_str,
+                file_name=f"{model_name}_info.txt",
+                mime="text/plain",
+                help="Information about features used in this model"
+            )
+            
+            st.info("Download this information to know how to use your model correctly.")
+            
+        # Usage instructions
+        with st.expander("How to use the downloaded model"):
+            st.markdown("""
+            ### Python code to load and use this model
+            
+            ```python
+            import pickle
+            import pandas as pd
+            
+            # Load the model
+            with open('your_downloaded_model.pkl', 'rb') as f:
+                model = pickle.load(f)
+            
+            # Prepare your new data with the same features
+            # Make sure to apply the same preprocessing steps:
+            # - Handle missing values
+            # - One-hot encode categorical features
+            # - Include all required features in the same order
+            
+            # Example:
+            X_new = pd.DataFrame({
+                'feature1': [...],
+                'feature2': [...],
+                # Include all features used during training
+            })
+            
+            # Make predictions
+            predictions = model.predict(X_new)
+            ```
+            
+            **Important:** Your new data must have the same structure as the data used for training.
+            """)
 else:
     # Instructions when no data is loaded
     st.info("👈 Please select a dataset from the sidebar to get started.")
@@ -355,6 +443,7 @@ else:
     2. Choose between regression and classification models
     3. Configure model parameters
     4. View performance metrics and visualizations
+    5. Download trained models for external use
     
     ### Available Models
     
