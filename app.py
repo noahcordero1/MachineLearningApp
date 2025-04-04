@@ -1008,7 +1008,13 @@ else:
     - Categorical features (one-hot encoding)
     - Feature scaling
     
-
+    ### Usage Tips
+    
+    - Begin by selecting a dataset from the sidebar
+    - For best results, choose features that are likely to influence the target variable
+    - Keep track of different models with the history feature
+    - Download your best model for use in other applications
+    """)
     
     # Display sample images
     col1, col2 = st.columns(2)
