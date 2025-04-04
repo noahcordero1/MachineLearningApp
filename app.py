@@ -88,14 +88,26 @@ if 'correlation_data' not in st.session_state:
 # Define callback functions
 def reset_app():
     """Reset all session state variables"""
+    # Keep model_history but clear everything else
+    model_history = st.session_state.get('model_history', [])
+    
+    # Clear all session state
     for key in list(st.session_state.keys()):
-        if key != 'model_history':
-            del st.session_state[key]
+        del st.session_state[key]
+    
+    # Restore model history
+    st.session_state.model_history = model_history
+    
+    # Re-initialize required session state variables with defaults
     st.session_state.data = None
     st.session_state.model = None
     st.session_state.predictions = None
     st.session_state.y_test = None
     st.session_state.model_type = None
+    st.session_state.X_test = None
+    st.session_state.feature_names = None
+    st.session_state.correlation_data = None
+    st.session_state.training_time = None
     st.session_state.preprocessing_options = {}
 
 def add_to_history():
@@ -179,8 +191,9 @@ with st.sidebar:
     
     # App reset button
     st.divider()
-    if st.button("🔄 Reset App", on_click=reset_app):
-        st.experimental_rerun()
+    if st.button("🔄 Reset App"):
+        reset_app()
+        st.rerun()
     
     # Model history section
     st.divider()
@@ -995,13 +1008,7 @@ else:
     - Categorical features (one-hot encoding)
     - Feature scaling
     
-    ### Usage Tips
-    
-    - Begin by selecting a dataset from the sidebar
-    - For best results, choose features that are likely to influence the target variable
-    - Keep track of different models with the history feature
-    - Download your best model for use in other applications
-    """)
+
     
     # Display sample images
     col1, col2 = st.columns(2)
